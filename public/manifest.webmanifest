@@ -1,0 +1,35 @@
+{
+  "name": "BidBack",
+  "short_name": "BidBack",
+  "description": "Stop losing jobs after the estimate.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f4",
+  "theme_color": "#1f6b4f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Estimate",
+      "short_name": "Add",
+      "description": "Add a new customer estimate",
+      "url": "/?action=add-estimate",
+      "icons": [{ "src": "/icon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Control Room",
+      "short_name": "Follow Up",
+      "description": "Open pending follow-ups",
+      "url": "/?view=control-room",
+      "icons": [{ "src": "/icon.svg", "sizes": "any" }]
+    }
+  ]
+}
