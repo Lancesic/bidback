@@ -1,0 +1,121 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+type Status = "Pending" | "Won" | "Lost" | "Closed";
+type StageStatus = "Due" | "Sent" | "Skipped" | "Snoozed";
+type Estimate = {
+  id: string;
+  customerName: string;
+  phone: string;
+  email: string;
+  tradeType: string;
+  jobType: string;
+  estimateAmount: number;
+  estimateSentDate: string;
+  status: Status;
+  notes: string;
+  followUps: FollowUp[];
+  createdAt: string;
+  updatedAt: string;
+};
+type FollowUp = { id: string; stage: string; dueDate: string; status: StageStatus; sentDate?: string; messageContent: string };
+type Tester = { name: string; email: string; phone: string };
+
+const STORAGE_KEY = "bidback-v1";
+const TESTER_KEY = "bidback-tester-v1";
+const FEEDBACK_EMAIL = "lancebradleyadcock@gmail.com";
+const stages = [1, 3, 7, 14, 30];
+const trades = ["General Contractor", "HVAC", "Roofing", "Painting", "Landscaping", "Remodeling", "Plumbing", "Electrical", "Other"];
+
+function today() { return new Date().toISOString().slice(0, 10); }
+function id(prefix: string) { return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+function addDays(date: string, days: number) { const d = new Date(`${date}T12:00:00`); d.setDate(d.getDate() + days); return d.toISOString().slice(0, 10); }
+function money(value: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value || 0); }
+function prettyDate(value?: string) { return value ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(`${value}T12:00:00`)) : "-"; }
+function script(estimate: Pick<Estimate, "customerName" | "jobType">, stage: string) {
+  if (stage === "Day 1") return `Hi ${estimate.customerName}, this is Lance with BidBack Contracting. Just confirming you received the estimate for your ${estimate.jobType}. Happy to answer any questions.`;
+  if (stage === "Day 3") return `Hi ${estimate.customerName}, checking in on the ${estimate.jobType} estimate. Is this still something you would like to move forward with?`;
+  if (stage === "Day 7") return `Hi ${estimate.customerName}, quick reminder that the estimate includes the scope we discussed for ${estimate.jobType}. I can help you compare options if useful.`;
+  if (stage === "Day 14") return `Hi ${estimate.customerName}, no pressure. Should I keep this estimate open, make changes, or close it out for now?`;
+  return `Hi ${estimate.customerName}, I am closing the loop on the ${estimate.jobType} estimate. If this comes back up, I would be glad to help.`;
+}
+function buildFollowUps(estimate: Pick<Estimate, "customerName" | "jobType" | "estimateSentDate">) {
+  return stages.map((day) => ({ id: id("fu"), stage: `Day ${day}`, dueDate: addDays(estimate.estimateSentDate, day), status: "Due" as StageStatus, messageContent: script(estimate, `Day ${day}`) }));
+}
+function nextFollowUp(estimate: Estimate) { return estimate.followUps.filter((f) => f.status === "Due").sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0]; }
+function demoData(): Estimate[] {
+  return [
+    ["Martha Collins", "Roofing", "roof repair", 8400, -3, "Pending", "Leak over garage. Asked about starting next week."],
+    ["Dan and Priya Shah", "Remodeling", "bathroom remodel", 18750, -8, "Pending", "Comparing two layouts. Strong fit if timing works."],
+    ["Oak Lane Dental", "HVAC", "unit replacement", 12600, -14, "Won", "Approved deposit. Schedule crew."],
+    ["Ben Ramirez", "Painting", "exterior paint", 5200, -20, "Lost", "Went with lower bid."],
+    ["Riverside HOA", "Landscaping", "seasonal cleanup", 3600, -1, "Pending", "Board votes this week."],
+  ].map(([customerName, tradeType, jobType, amount, offset, status, notes], index) => {
+    const estimate = { id: `demo-${index}`, customerName: String(customerName), phone: `(555) 200-10${index}`, email: `${String(customerName).toLowerCase().replaceAll(" ", ".")}@example.com`, tradeType: String(tradeType), jobType: String(jobType), estimateAmount: Number(amount), estimateSentDate: addDays(today(), Number(offset)), status: status as Status, notes: String(notes), followUps: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    return { ...estimate, followUps: buildFollowUps(estimate) };
+  });
+}
+
+export function BidBackApp() {
+  const [estimates, setEstimates] = useState<Estimate[]>(demoData());
+  const [tester, setTester] = useState<Tester | null>(null);
+  const [view, setView] = useState("Dashboard");
+  const [selected, setSelected] = useState<string>("");
+  const [toast, setToast] = useState("");
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [form, setForm] = useState({ customerName: "", phone: "", email: "", tradeType: "Remodeling", jobType: "", estimateAmount: "", estimateSentDate: today(), status: "Pending" as Status, notes: "" });
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const savedTester = localStorage.getItem(TESTER_KEY);
+    if (saved) setEstimates(JSON.parse(saved));
+    if (savedTester) setTester(JSON.parse(savedTester));
+  }, []);
+  useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(estimates)); }, [estimates]);
+  useEffect(() => { if (!toast) return; const t = window.setTimeout(() => setToast(""), 2200); return () => window.clearTimeout(t); }, [toast]);
+
+  const metrics = useMemo(() => {
+    const pending = estimates.filter((e) => e.status === "Pending");
+    const won = estimates.filter((e) => e.status === "Won");
+    const lost = estimates.filter((e) => e.status === "Lost");
+    const openValue = pending.reduce((sum, e) => sum + e.estimateAmount, 0);
+    const wonValue = won.reduce((sum, e) => sum + e.estimateAmount, 0);
+    const lostValue = lost.reduce((sum, e) => sum + e.estimateAmount, 0);
+    const due = pending.flatMap((e) => e.followUps).filter((f) => f.status === "Due" && f.dueDate <= today()).length;
+    return { pending, wonValue, lostValue, openValue, due, recovery: wonValue + lostValue ? Math.round((wonValue / (wonValue + lostValue)) * 100) : 0 };
+  }, [estimates]);
+
+  function show(message: string) { setToast(message); }
+  async function copy(text: string) { await navigator.clipboard?.writeText(text).catch(() => undefined); show("Copied"); }
+  function saveTester(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); const data = Object.fromEntries(new FormData(event.currentTarget)) as Tester; localStorage.setItem(TESTER_KEY, JSON.stringify(data)); setTester(data); show("Tester profile saved"); }
+  function saveEstimate(event: React.FormEvent) {
+    event.preventDefault();
+    const estimate = { ...form, id: id("estimate"), estimateAmount: Number(form.estimateAmount), followUps: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Estimate;
+    setEstimates((current) => [{ ...estimate, followUps: buildFollowUps(estimate) }, ...current]);
+    setSelected(estimate.id); setView("Control Room"); setForm({ ...form, customerName: "", phone: "", email: "", jobType: "", estimateAmount: "", notes: "", estimateSentDate: today() }); show("Estimate added");
+  }
+  function setStatus(idValue: string, status: Status) { setEstimates((current) => current.map((e) => e.id === idValue ? { ...e, status, updatedAt: new Date().toISOString() } : e)); show(`Marked ${status.toLowerCase()}`); }
+  function markStage(estimateId: string, stage: string, status: StageStatus) { setEstimates((current) => current.map((e) => e.id === estimateId ? { ...e, followUps: e.followUps.map((f) => f.stage === stage && f.status === "Due" ? { ...f, status, sentDate: status === "Sent" ? today() : f.sentDate, dueDate: status === "Snoozed" ? addDays(f.dueDate, 1) : f.dueDate } : f) } : e)); show(status === "Sent" ? "Stage marked sent" : status); }
+  function exportCsv() { const csv = [["Customer", "Phone", "Email", "Trade", "Job", "Amount", "Sent", "Status", "Notes"], ...estimates.map((e) => [e.customerName, e.phone, e.email, e.tradeType, e.jobType, String(e.estimateAmount), e.estimateSentDate, e.status, e.notes])].map((r) => r.map((c) => `"${c.replaceAll('"', '""')}"`).join(",")).join("\n"); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = `bidback-estimates-${today()}.csv`; a.click(); }
+  function sendFeedback(comments: string) { const summary = { total: estimates.length, pending: metrics.pending.length, wonValue: metrics.wonValue, lostValue: metrics.lostValue }; const pack = JSON.stringify({ tester, comments, summary, estimates }, null, 2); copy(pack); location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(`BidBack feedback from ${tester?.name || "tester"}`)}&body=${encodeURIComponent(`Tester: ${tester?.name || "Unknown"}\nEmail: ${tester?.email || "Unknown"}\nPhone: ${tester?.phone || "Unknown"}\n\nComments:\n${comments || "No comments entered."}\n\nSummary:\n${JSON.stringify(summary, null, 2)}\n\nFull package copied to clipboard. Paste below if needed.\n\n${pack.slice(0, 12000)}`)}`; }
+
+  return <div className="app-shell">
+    <aside className="sidebar"><div className="brand"><div className="brand-mark">BB</div><div><h1>BidBack</h1><p>Stop losing jobs after the estimate.</p></div></div><nav className="nav">{["Dashboard", "Estimates", "Add Estimate", "Control Room", "Scripts"].map((item) => <button className={view === item ? "active" : ""} key={item} onClick={() => setView(item)}>{item}</button>)}</nav></aside>
+    <main className="main"><select className="mobile-nav" value={view} onChange={(e) => setView(e.target.value)}>{["Dashboard", "Estimates", "Add Estimate", "Control Room", "Scripts"].map((item) => <option key={item}>{item}</option>)}</select>{view === "Dashboard" && <Dashboard metrics={metrics} estimates={estimates} onAdd={() => setView("Add Estimate")} onControl={() => setView("Control Room")} onExport={exportCsv} />}{view === "Estimates" && <Estimates estimates={estimates} onControl={(idValue) => { setSelected(idValue); setView("Control Room"); }} onStatus={setStatus} onExport={exportCsv} />}{view === "Add Estimate" && <AddEstimate form={form} setForm={setForm} saveEstimate={saveEstimate} />}{view === "Control Room" && <ControlRoom estimates={estimates.filter((e) => e.status === "Pending")} selected={selected} setSelected={setSelected} copy={copy} markStage={markStage} setStatus={setStatus} />}{view === "Scripts" && <Scripts copy={copy} />}</main>
+    <button className="feedback-fab" onClick={() => setFeedbackOpen(true)}>Send Feedback</button>{!tester && <TesterModal onSubmit={saveTester} />}{feedbackOpen && <FeedbackModal tester={tester} onClose={() => setFeedbackOpen(false)} onSend={sendFeedback} />}{toast && <div className="toast">{toast}</div>}
+  </div>;
+}
+
+function Dashboard({ metrics, estimates, onAdd, onControl, onExport }: { metrics: { openValue: number; wonValue: number; lostValue: number; due: number; recovery: number }; estimates: Estimate[]; onAdd: () => void; onControl: () => void; onExport: () => void }) {
+  const hot = estimates.filter((e) => e.status === "Pending").sort((a, b) => (nextFollowUp(a)?.dueDate || "9999").localeCompare(nextFollowUp(b)?.dueDate || "9999")).slice(0, 5);
+  return <><Header title="Dashboard" text="See what needs attention today." actions={<><button className="button primary" onClick={onControl}>Start follow-ups</button><button className="button" onClick={onAdd}>Add estimate</button><button className="button" onClick={onExport}>Export CSV</button></>} /><div className="grid metrics snapshot"><Metric label="Due/overdue" value={String(metrics.due)} /><Metric label="Open value" value={money(metrics.openValue)} /><Metric label="Won" value={money(metrics.wonValue)} /><Metric label="Lost" value={money(metrics.lostValue)} /><Metric label="Recovery" value={`${metrics.recovery}%`} /><Metric label="Estimates" value={String(estimates.length)} /></div><section className="card section"><h3>Next open estimates</h3><div className="panel-list">{hot.map((e) => <div className="preference-row" key={e.id}><div><strong>{e.customerName}</strong><p className="muted">{e.jobType} - {nextFollowUp(e)?.stage || "Done"}</p></div><strong>{money(e.estimateAmount)}</strong></div>)}</div></section></>;
+}
+function Estimates({ estimates, onControl, onStatus, onExport }: { estimates: Estimate[]; onControl: (id: string) => void; onStatus: (id: string, status: Status) => void; onExport: () => void }) { return <><Header title="Estimates" text="Track customers and job status." actions={<button className="button" onClick={onExport}>Export CSV</button>} /><section className="estimate-cards section">{estimates.map((e) => <article className="card estimate-card" key={e.id}><div className="estimate-card-main"><h3>{e.customerName}</h3><span className={`badge ${e.status.toLowerCase()}`}>{e.status}</span></div><p className="muted">{e.tradeType} - {e.jobType}</p><div className="estimate-card-meta"><div><span>Amount</span>{money(e.estimateAmount)}</div><div><span>Next</span>{nextFollowUp(e)?.stage || "Done"}</div><div><span>Phone</span>{e.phone}</div><div><span>Email</span>{e.email}</div></div><p>{e.notes}</p><div className="actions"><button className="button small primary" onClick={() => onControl(e.id)}>View</button><button className="button small" onClick={() => onStatus(e.id, "Won")}>Won</button><button className="button small" onClick={() => onStatus(e.id, "Lost")}>Lost</button></div></article>)}</section></>; }
+function AddEstimate({ form, setForm, saveEstimate }: { form: Record<string, string>; setForm: (form: any) => void; saveEstimate: (event: React.FormEvent) => void }) { return <><Header title="Add Estimate" text="BidBack builds follow-ups from the sent date." /><form className="card form-grid" onSubmit={saveEstimate}>{["customerName|Customer name", "phone|Phone", "email|Email", "jobType|Job type", "estimateAmount|Estimate amount", "estimateSentDate|Estimate sent date"].map((x) => { const [key, label] = x.split("|"); return <label className="field" key={key}><span>{label}</span><input required={key !== "phone" && key !== "email"} type={key === "estimateAmount" ? "number" : key === "estimateSentDate" ? "date" : "text"} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></label>; })}<label className="field"><span>Trade</span><select value={form.tradeType} onChange={(e) => setForm({ ...form, tradeType: e.target.value })}>{trades.map((t) => <option key={t}>{t}</option>)}</select></label><label className="field full"><span>Notes</span><textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label><button className="button primary">Save estimate</button></form></>; }
+function ControlRoom({ estimates, selected, setSelected, copy, markStage, setStatus }: { estimates: Estimate[]; selected: string; setSelected: (id: string) => void; copy: (text: string) => void; markStage: (id: string, stage: string, status: StageStatus) => void; setStatus: (id: string, status: Status) => void }) { const visible = selected ? estimates.filter((e) => e.id === selected) : estimates; return <><Header title="Follow-Up Control Room" text="Work the next follow-up, then mark the stage sent." actions={<select value={selected} onChange={(e) => setSelected(e.target.value)}><option value="">All pending</option>{estimates.map((e) => <option value={e.id} key={e.id}>{e.customerName}</option>)}</select>} /><div className="panel-list card section">{visible.map((e) => { const next = nextFollowUp(e); return <article className="estimate-panel follow-card" key={e.id}><div className="follow-head"><div><h3>{e.customerName}</h3><p className="muted">{e.tradeType} - {e.jobType}</p></div><strong>{money(e.estimateAmount)}</strong></div><p><span className="badge pending">{next?.stage || "Complete"}</span> <span className="muted">{next ? prettyDate(next.dueDate) : "No open follow-up"}</span></p>{next && <><div className="action-grid"><a className="button small" href={`tel:${e.phone}`}>Call</a><a className="button small" href={`sms:${e.phone}?&body=${encodeURIComponent(next.messageContent)}`}>Text</a><a className="button small" href={`mailto:${e.email}?subject=${encodeURIComponent(`Estimate for ${e.jobType}`)}&body=${encodeURIComponent(next.messageContent)}`}>Email</a></div><h4>Script</h4><div className="script-box">{next.messageContent}</div><div className="stage-actions section"><button className="button small" onClick={() => copy(next.messageContent)}>Copy Script</button><button className="button small" onClick={() => markStage(e.id, next.stage, "Snoozed")}>Snooze</button><button className="button small" onClick={() => markStage(e.id, next.stage, "Skipped")}>Skip</button><button className="button small primary" onClick={() => markStage(e.id, next.stage, "Sent")}>Mark stage sent</button></div></>}<p className="muted">{e.notes}</p><div className="actions"><button className="button small" onClick={() => setStatus(e.id, "Won")}>Mark won</button><button className="button small" onClick={() => setStatus(e.id, "Lost")}>Mark lost</button></div></article>; })}</div></>; }
+function Scripts({ copy }: { copy: (text: string) => void }) { const items = ["Day 1 confirmation", "Day 3 check-in", "Day 7 value reminder", "Day 14 gentle follow-up", "Day 30 close-the-loop", "Too expensive objection", "Getting other quotes objection", "Still thinking objection", "Waiting on spouse/partner", "Insurance delay", "Old estimate win-back", "Voicemail script"]; return <><Header title="Script Library" text="Reusable contractor follow-up scripts." /><section className="script-grid">{items.map((title) => <article className="card script-card" key={title}><span className="badge">Script</span><h3>{title}</h3><div className="script-box">{script({ customerName: "Customer", jobType: "project" }, title.split(" ").slice(0, 2).join(" "))}</div><button className="button small section" onClick={() => copy(title)}>Copy</button></article>)}</section></>; }
+function TesterModal({ onSubmit }: { onSubmit: (event: React.FormEvent<HTMLFormElement>) => void }) { return <div className="modal-backdrop"><form className="card tester-modal" onSubmit={onSubmit}><div className="brand"><div className="brand-mark">BB</div><div><h1>BidBack</h1><p>Stop losing jobs after the estimate.</p></div></div><h2>Start testing</h2><p className="muted">Enter your contact info once, then use the app right away.</p><label className="field"><span>Your name</span><input name="name" required autoFocus /></label><label className="field"><span>Email</span><input name="email" type="email" required /></label><label className="field"><span>Phone</span><input name="phone" type="tel" required /></label><button className="button primary tester-start">Open BidBack</button></form></div>; }
+function FeedbackModal({ tester, onClose, onSend }: { tester: Tester | null; onClose: () => void; onSend: (comments: string) => void }) { const [comments, setComments] = useState(""); return <div className="modal-backdrop"><form className="card tester-modal" onSubmit={(e) => { e.preventDefault(); onSend(comments); }}><h2>Send feedback</h2><p className="muted">This opens an email to Lance with comments and test data.</p>{tester && <div className="script-box summary-box"><strong>{tester.name}</strong><br />{tester.email}<br />{tester.phone}</div>}<label className="field"><span>Comments</span><textarea value={comments} onChange={(e) => setComments(e.target.value)} autoFocus /></label><div className="actions section"><button className="button primary">Email feedback</button><button className="button" type="button" onClick={onClose}>Cancel</button></div></form></div>; }
+function Header({ title, text, actions }: { title: string; text: string; actions?: React.ReactNode }) { return <header className="topbar"><div><h2>{title}</h2><p>{text}</p></div>{actions && <div className="actions">{actions}</div>}</header>; }
+function Metric({ label, value }: { label: string; value: string }) { return <div className="card metric-card"><div className="metric-label">{label}</div><div className="metric-value">{value}</div></div>; }
