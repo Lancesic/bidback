@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="BidBack">
+  <rect width="512" height="512" rx="96" fill="#1f6b4f"/>
+  <path fill="#fff" d="M132 132h126c50 0 83 27 83 69 0 25-13 46-35 57 31 10 50 34 50 67 0 48-37 77-92 77H132V132Zm112 106c28 0 43-11 43-31 0-19-15-30-43-30h-58v61h58Zm10 119c31 0 48-13 48-36s-17-36-48-36h-68v72h68Z"/>
+  <path fill="#dcece4" d="M355 132h24v270h-24z"/>
+</svg>
