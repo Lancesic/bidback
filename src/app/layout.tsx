@@ -3,11 +3,10 @@ import { BidBackPolish } from "@/components/bidback-polish";
 import { ControlRoomPolish } from "@/components/control-room-polish";
 import { DashboardOpenEstimates } from "@/components/dashboard-open-estimates";
 import { DashboardSpacingPolish } from "@/components/dashboard-spacing-polish";
+import { FreshStartCleaner } from "@/components/fresh-start-cleaner";
 import { ScriptTemplateUpgrade } from "@/components/script-template-upgrade";
 import { SettingsPolish } from "@/components/settings-polish";
 import { SignupHardPersonalizer } from "@/components/signup-hard-personalizer";
-import { SignupPersonalizer } from "@/components/signup-personalizer";
-import { SignupSettingsBridge } from "@/components/signup-settings-bridge";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -37,14 +36,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <FreshStartCleaner />
         <BidBackPolish />
         <ControlRoomPolish />
         <DashboardOpenEstimates />
         <DashboardSpacingPolish />
         <ScriptTemplateUpgrade />
         <SettingsPolish />
-        <SignupSettingsBridge />
-        <SignupPersonalizer />
         <SignupHardPersonalizer />
         {children}
       </body>
