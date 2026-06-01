@@ -56,6 +56,31 @@ export function BidBackPolish() {
         padding-top: 0;
         border-top: 0;
       }
+      .script-card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .script-card .badge {
+        align-self: flex-start;
+      }
+      .script-card h3 {
+        margin: 0;
+        color: var(--foreground);
+        font-size: 1.08rem;
+        font-weight: 850;
+        line-height: 1.2;
+      }
+      .script-card .script-box {
+        margin: 0;
+        min-height: 120px;
+        padding: 14px;
+        line-height: 1.45;
+      }
+      .script-card .button {
+        align-self: flex-start;
+        margin-top: 8px;
+      }
       @media (max-width: 520px) {
         .estimate-card > p:not(.muted),
         .follow-card .stage-actions + p.muted {
@@ -68,6 +93,9 @@ export function BidBackPolish() {
         .follow-card .action-grid,
         .follow-card .stage-actions {
           gap: 8px;
+        }
+        .script-card h3 {
+          font-size: 1.05rem;
         }
       }
     `}</style>
