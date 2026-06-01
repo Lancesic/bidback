@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { BidBackPolish } from "@/components/bidback-polish";
+import { ControlRoomPolish } from "@/components/control-room-polish";
 import { SignupSettingsBridge } from "@/components/signup-settings-bridge";
 import "./globals.css";
 
@@ -31,6 +32,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <BidBackPolish />
+        <ControlRoomPolish />
         <SignupSettingsBridge />
         {children}
       </body>
