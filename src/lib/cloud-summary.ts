@@ -5,11 +5,15 @@ type EstimateLike = {
 };
 
 type AppDataLike = {
-  estimates?: EstimateLike[];
+  estimates?: unknown[];
 };
 
 function amount(value: unknown) {
   return typeof value === "number" ? value : 0;
+}
+
+function asEstimate(value: unknown): EstimateLike {
+  return value && typeof value === "object" ? value as EstimateLike : {};
 }
 
 function followUps(value: unknown) {
@@ -17,7 +21,7 @@ function followUps(value: unknown) {
 }
 
 export function buildAppSummary(data: AppDataLike) {
-  const estimates = Array.isArray(data.estimates) ? data.estimates : [];
+  const estimates = (Array.isArray(data.estimates) ? data.estimates : []).map(asEstimate);
   const pending = estimates.filter((estimate) => estimate.status === "Pending");
   const won = estimates.filter((estimate) => estimate.status === "Won");
   const lost = estimates.filter((estimate) => estimate.status === "Lost");
