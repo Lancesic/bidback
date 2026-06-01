@@ -13,7 +13,29 @@ BidBack is a simple contractor estimate follow-up mini CRM.
 - Saves locally in the browser
 - Includes a first-open tester form
 - Includes a large Send Feedback button
-- Sends feedback to `lancebradleyadcock@gmail.com`
+- Opens a Tally feedback form when configured
+- Falls back to email feedback to `lancebradleyadcock@gmail.com` if Tally is not configured
+
+## Tally feedback setup
+
+Create a Tally form with these fields:
+
+- Comments, long answer
+- Tester name, hidden field named `tester_name`
+- Tester email, hidden field named `tester_email`
+- Tester phone, hidden field named `tester_phone`
+- Summary, hidden field named `summary`
+- App data, hidden field named `app_data`
+
+In Tally, enable email notifications to `lancebradleyadcock@gmail.com`.
+
+In Vercel, add this environment variable:
+
+```text
+NEXT_PUBLIC_TALLY_FEEDBACK_URL=https://tally.so/r/YOUR_FORM_ID
+```
+
+Then redeploy the site. After that, the **Send Feedback** button opens the Tally form and Tally sends the notification.
 
 ## Run locally
 
