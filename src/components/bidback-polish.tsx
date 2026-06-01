@@ -1,6 +1,63 @@
 export function BidBackPolish() {
   return (
     <style>{`
+      .topbar:has(+ .snapshot) {
+        margin-bottom: 14px;
+      }
+      .topbar:has(+ .snapshot) h2::after {
+        content: "Money is sitting in unsold estimates.";
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: .98rem;
+        font-weight: 500;
+      }
+      .snapshot {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .snapshot .metric-card:nth-child(2) {
+        grid-column: 1 / -1;
+        border-color: rgba(31,107,79,.32);
+        background: linear-gradient(135deg, rgba(31,107,79,.12), #fff 58%);
+        padding: 20px;
+      }
+      .snapshot .metric-card:nth-child(2) .metric-label {
+        font-size: .9rem;
+        color: var(--primary-dark);
+        font-weight: 900;
+      }
+      .snapshot .metric-card:nth-child(2) .metric-label::before {
+        content: "Money Waiting on Follow-Up";
+        font-size: 1rem;
+      }
+      .snapshot .metric-card:nth-child(2) .metric-label {
+        font-size: 0;
+      }
+      .snapshot .metric-card:nth-child(2) .metric-value {
+        font-size: clamp(2.25rem, 7vw, 4.2rem);
+        letter-spacing: 0;
+        line-height: .95;
+      }
+      .snapshot .metric-card:nth-child(4) {
+        border-color: rgba(163,61,53,.32);
+        background: #fff8f7;
+      }
+      .snapshot .metric-card:nth-child(4) .metric-label {
+        font-size: 0;
+        color: var(--danger);
+        font-weight: 900;
+      }
+      .snapshot .metric-card:nth-child(4) .metric-label::before {
+        content: "Money Already Lost";
+        font-size: .9rem;
+      }
+      .snapshot .metric-card:nth-child(4) .metric-value {
+        color: var(--danger);
+      }
+      .snapshot .metric-card:nth-child(1) .metric-label { font-size: 0; }
+      .snapshot .metric-card:nth-child(1) .metric-label::before { content: "Follow-ups Needing Action"; font-size: .83rem; }
+      .snapshot .metric-card:nth-child(3) .metric-label { font-size: 0; }
+      .snapshot .metric-card:nth-child(3) .metric-label::before { content: "Revenue Won Back"; font-size: .83rem; }
       .estimate-card > p:not(.muted),
       .follow-card .stage-actions + p.muted {
         margin: 12px 0 0;
@@ -82,6 +139,12 @@ export function BidBackPolish() {
         margin-top: 8px;
       }
       @media (max-width: 520px) {
+        .snapshot {
+          grid-template-columns: 1fr;
+        }
+        .snapshot .metric-card:nth-child(2) {
+          padding: 18px;
+        }
         .estimate-card > p:not(.muted),
         .follow-card .stage-actions + p.muted {
           font-size: .95rem;
