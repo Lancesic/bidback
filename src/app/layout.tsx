@@ -3,6 +3,7 @@ import { BidBackPolish } from "@/components/bidback-polish";
 import { ControlRoomPolish } from "@/components/control-room-polish";
 import { DashboardOpenEstimates } from "@/components/dashboard-open-estimates";
 import { DashboardSpacingPolish } from "@/components/dashboard-spacing-polish";
+import { DemoDataControls } from "@/components/demo-data-controls";
 import { FollowUpStageTrail } from "@/components/follow-up-stage-trail";
 import { SettingsPolish } from "@/components/settings-polish";
 import "./globals.css";
@@ -38,6 +39,7 @@ export default function RootLayout({
         <ControlRoomPolish />
         <DashboardOpenEstimates />
         <DashboardSpacingPolish />
+        <DemoDataControls />
         <FollowUpStageTrail />
         <SettingsPolish />
         {children}
