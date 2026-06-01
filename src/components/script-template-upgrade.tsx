@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 type StoredFollowUp = {
   stage?: string;
@@ -32,7 +32,7 @@ type StoredApp = {
 };
 
 const STORAGE_KEY = "bidback-v2";
-const UPGRADE_KEY = "bidback-script-template-upgrade-v1";
+const UPGRADE_KEY = "bidback-script-template-upgrade-v2";
 
 const upgradedTemplates: Record<string, string> = {
   "Day 1": "Hi {customer}, this is {contractor} with {company}. I'm checking that you received the estimate for your {job}. If you have questions or want to adjust the scope, call or text me at {phone}.",
@@ -75,7 +75,7 @@ function shouldReplaceTemplate(title: string, current?: string) {
 }
 
 export function ScriptTemplateUpgrade() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const stored = raw ? (JSON.parse(raw) as StoredApp) : {};
