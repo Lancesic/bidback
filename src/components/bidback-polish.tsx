@@ -58,6 +58,83 @@ export function BidBackPolish() {
       .snapshot .metric-card:nth-child(1) .metric-label::before { content: "Follow-ups Needing Action"; font-size: .83rem; }
       .snapshot .metric-card:nth-child(3) .metric-label { font-size: 0; }
       .snapshot .metric-card:nth-child(3) .metric-label::before { content: "Revenue Won Back"; font-size: .83rem; }
+      .topbar:has(+ .form-grid) h2::before {
+        content: "Add a sent estimate";
+        display: block;
+        margin-bottom: 4px;
+        color: var(--foreground);
+      }
+      .topbar:has(+ .form-grid) h2 {
+        font-size: 0;
+      }
+      .topbar:has(+ .form-grid) h2::before {
+        font-size: clamp(1.8rem, 5vw, 2.8rem);
+        line-height: 1;
+      }
+      .topbar:has(+ .form-grid) p {
+        max-width: 620px;
+        font-size: 1rem;
+        color: var(--muted);
+      }
+      .topbar:has(+ .form-grid) p::after {
+        content: " BidBack will build the follow-up sequence from the sent date.";
+      }
+      form.form-grid {
+        position: relative;
+        padding-top: 70px;
+      }
+      form.form-grid::before {
+        content: "Customer";
+        position: absolute;
+        top: 18px;
+        left: 18px;
+        color: var(--primary-dark);
+        font-size: .8rem;
+        font-weight: 950;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+      }
+      form.form-grid::after {
+        content: "Follow-ups scheduled from sent date: Day 1, 3, 7, 14, 30";
+        grid-column: 1 / -1;
+        border: 1px solid rgba(31,107,79,.2);
+        border-radius: 8px;
+        background: #f3faf6;
+        color: var(--primary-dark);
+        padding: 12px;
+        font-size: .9rem;
+        font-weight: 800;
+      }
+      form.form-grid label:nth-of-type(4)::before {
+        content: "Job";
+        display: block;
+        grid-column: 1 / -1;
+        margin: 2px 0 4px;
+        color: var(--primary-dark);
+        font-size: .8rem;
+        font-weight: 950;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+      }
+      form.form-grid label:nth-of-type(6)::before {
+        content: "Follow-up";
+        display: block;
+        margin: 2px 0 4px;
+        color: var(--primary-dark);
+        font-size: .8rem;
+        font-weight: 950;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+      }
+      form.form-grid .button.primary {
+        grid-column: 1 / -1;
+        min-height: 54px;
+        font-size: 0;
+      }
+      form.form-grid .button.primary::before {
+        content: "Save estimate and build follow-ups";
+        font-size: 1rem;
+      }
       .estimate-card > p:not(.muted),
       .follow-card .stage-actions + p.muted {
         margin: 12px 0 0;
@@ -82,84 +159,30 @@ export function BidBackPolish() {
         padding-top: 12px;
         border-top: 1px solid var(--border);
       }
-      .follow-card {
-        padding: 16px;
-      }
-      .follow-card .follow-head {
-        margin-bottom: 8px;
-      }
-      .follow-card > p:first-of-type {
-        margin: 0 0 10px;
-      }
-      .follow-card .action-grid {
-        margin: 8px 0 12px;
-      }
-      .follow-card h4 {
-        margin: 10px 0 8px;
-        color: var(--muted);
-        font-size: .82rem;
-        font-weight: 850;
-      }
-      .follow-card .script-box {
-        min-height: 112px;
-        padding: 12px 14px;
-        line-height: 1.45;
-      }
-      .follow-card .stage-actions {
-        margin-top: 12px;
-      }
-      .follow-card .actions {
-        margin-top: 10px;
-        padding-top: 0;
-        border-top: 0;
-      }
-      .script-card {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .script-card .badge {
-        align-self: flex-start;
-      }
-      .script-card h3 {
-        margin: 0;
-        color: var(--foreground);
-        font-size: 1.08rem;
-        font-weight: 850;
-        line-height: 1.2;
-      }
-      .script-card .script-box {
-        margin: 0;
-        min-height: 120px;
-        padding: 14px;
-        line-height: 1.45;
-      }
-      .script-card .button {
-        align-self: flex-start;
-        margin-top: 8px;
-      }
+      .follow-card { padding: 16px; }
+      .follow-card .follow-head { margin-bottom: 8px; }
+      .follow-card > p:first-of-type { margin: 0 0 10px; }
+      .follow-card .action-grid { margin: 8px 0 12px; }
+      .follow-card h4 { margin: 10px 0 8px; color: var(--muted); font-size: .82rem; font-weight: 850; }
+      .follow-card .script-box { min-height: 112px; padding: 12px 14px; line-height: 1.45; }
+      .follow-card .stage-actions { margin-top: 12px; }
+      .follow-card .actions { margin-top: 10px; padding-top: 0; border-top: 0; }
+      .script-card { display: flex; flex-direction: column; gap: 10px; }
+      .script-card .badge { align-self: flex-start; }
+      .script-card h3 { margin: 0; color: var(--foreground); font-size: 1.08rem; font-weight: 850; line-height: 1.2; }
+      .script-card .script-box { margin: 0; min-height: 120px; padding: 14px; line-height: 1.45; }
+      .script-card .button { align-self: flex-start; margin-top: 8px; }
       @media (max-width: 520px) {
-        .snapshot {
-          grid-template-columns: 1fr;
-        }
-        .snapshot .metric-card:nth-child(2) {
-          padding: 18px;
-        }
+        .snapshot { grid-template-columns: 1fr; }
+        .snapshot .metric-card:nth-child(2) { padding: 18px; }
+        form.form-grid { padding-top: 62px; }
         .estimate-card > p:not(.muted),
-        .follow-card .stage-actions + p.muted {
-          font-size: .95rem;
-        }
+        .follow-card .stage-actions + p.muted { font-size: .95rem; }
         .estimate-card .actions .button,
-        .follow-card .actions .button {
-          flex: 1 1 auto;
-        }
+        .follow-card .actions .button { flex: 1 1 auto; }
         .follow-card .action-grid,
-        .follow-card .stage-actions {
-          gap: 8px;
-        }
-        .script-card h3 {
-          font-size: 1.05rem;
-        }
+        .follow-card .stage-actions { gap: 8px; }
+        .script-card h3 { font-size: 1.05rem; }
       }
     `}</style>
   );
