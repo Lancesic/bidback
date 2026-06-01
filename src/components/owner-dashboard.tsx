@@ -24,6 +24,25 @@ type FeedbackRow = {
   created_at?: string;
 };
 
+type EstimateSnapshot = {
+  id?: string;
+  customerName?: string;
+  phone?: string;
+  email?: string;
+  tradeType?: string;
+  jobType?: string;
+  estimateAmount?: number | string;
+  estimateSentDate?: string;
+  status?: string;
+  notes?: string;
+  followUps?: Array<{
+    stage?: string;
+    dueDate?: string;
+    sentDate?: string;
+    status?: string;
+  }>;
+};
+
 type OwnerResponse = {
   ok?: boolean;
   message?: string;
@@ -37,7 +56,7 @@ const OWNER_KEY_STORAGE = "bidback-owner-key";
 
 function formatDate(value?: string) {
   if (!value) return "Not saved yet";
-  const parsed = new Date(value);
+  const parsed = new Date(value.includes("T") ? value : `${value}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return "Not saved yet";
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -67,6 +86,10 @@ function textValue(value: unknown, fallback = "-") {
 
 function objectValue(value: unknown): JsonRecord {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as JsonRecord) : {};
+}
+
+function arrayValue<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
 }
 
 function csvCell(value: unknown) {
@@ -131,6 +154,14 @@ function recentCount(testers: TesterRow[]) {
     const value = tester.first_seen_at || tester.created_at || tester.last_seen_at;
     return value ? new Date(value).getTime() >= weekAgo : false;
   }).length;
+}
+
+function nextFollowUpLabel(estimate: EstimateSnapshot) {
+  const due = arrayValue<NonNullable<EstimateSnapshot["followUps"]>[number]>(estimate.followUps)
+    .filter((followUp) => followUp.status === "Due")
+    .sort((a, b) => String(a.dueDate || "9999").localeCompare(String(b.dueDate || "9999")))[0];
+  if (!due) return "No open follow-up";
+  return `${due.stage || "Follow-up"} due ${formatDate(due.dueDate)}`;
 }
 
 export function OwnerDashboard() {
@@ -200,10 +231,18 @@ export function OwnerDashboard() {
 
   const selected = testers.find((tester) => tester.id === selectedId) || filteredTesters[0] || testers[0];
   const selectedSettings = objectValue(selected?.app_data?.settings);
+  const selectedEstimates = useMemo(() => arrayValue<EstimateSnapshot>(selected?.app_data?.estimates), [selected?.app_data]);
   const selectedFeedback = useMemo(
     () => feedback.filter((item) => item.tester_id === selected?.id),
     [feedback, selected?.id],
   );
+  const sentActivity = useMemo(() => {
+    return selectedEstimates
+      .flatMap((estimate) => arrayValue<NonNullable<EstimateSnapshot["followUps"]>[number]>(estimate.followUps).map((followUp) => ({ estimate, followUp })))
+      .filter((item) => item.followUp.status === "Sent")
+      .sort((a, b) => String(b.followUp.sentDate || "").localeCompare(String(a.followUp.sentDate || "")))
+      .slice(0, 6);
+  }, [selectedEstimates]);
 
   const totals = useMemo(() => {
     return testers.reduce(
@@ -292,7 +331,7 @@ export function OwnerDashboard() {
                     >
                       <strong>{tester.name || "Unnamed tester"}</strong>
                       <span>{tester.email}</span>
-                      <small>{textValue(settings.companyName, "No company yet")} · {money(tester.app_summary?.openEstimateValue)} open</small>
+                      <small>{textValue(settings.companyName, "No company yet")} - {money(tester.app_summary?.openEstimateValue)} open</small>
                       <small>Last active {formatDate(tester.last_seen_at)}</small>
                     </button>
                   );
@@ -333,6 +372,47 @@ export function OwnerDashboard() {
                     <div><span>Sent follow-ups</span><strong>{numberValue(selected.app_summary?.sentFollowUps)}</strong></div>
                   </div>
 
+                  <h3>Estimates in this tester&apos;s app</h3>
+                  {selectedEstimates.length ? (
+                    <div className="owner-estimate-list">
+                      {selectedEstimates.map((estimate, index) => (
+                        <article key={estimate.id || `${estimate.customerName}-${index}`}>
+                          <div className="owner-estimate-head">
+                            <div>
+                              <strong>{textValue(estimate.customerName, "Unnamed customer")}</strong>
+                              <p>{textValue(estimate.tradeType, "Trade")} - {textValue(estimate.jobType, "Job")}</p>
+                            </div>
+                            <div className="owner-estimate-money">
+                              <strong>{money(estimate.estimateAmount)}</strong>
+                              <span className={`owner-status ${String(estimate.status || "pending").toLowerCase()}`}>{textValue(estimate.status, "Pending")}</span>
+                            </div>
+                          </div>
+                          <div className="owner-estimate-meta">
+                            <span>Sent {formatDate(estimate.estimateSentDate)}</span>
+                            <span>{nextFollowUpLabel(estimate)}</span>
+                          </div>
+                          {estimate.notes && <p className="owner-note">{estimate.notes}</p>}
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="owner-empty">This tester has not added estimates yet.</p>
+                  )}
+
+                  <h3>Follow-up activity</h3>
+                  {sentActivity.length ? (
+                    <div className="owner-activity-list">
+                      {sentActivity.map(({ estimate, followUp }, index) => (
+                        <article key={`${estimate.id || estimate.customerName}-${followUp.stage}-${index}`}>
+                          <strong>{followUp.stage} sent</strong>
+                          <span>{textValue(estimate.customerName, "Customer")} - {formatDate(followUp.sentDate)}</span>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="owner-empty">No follow-ups have been marked sent yet.</p>
+                  )}
+
                   <h3>Feedback from this tester</h3>
                   {selectedFeedback.length ? (
                     <div className="owner-feedback-list">
@@ -346,9 +426,6 @@ export function OwnerDashboard() {
                   ) : (
                     <p className="owner-empty">No feedback from this tester yet.</p>
                   )}
-
-                  <h3>App snapshot</h3>
-                  <pre>{JSON.stringify(selected.app_summary || {}, null, 2)}</pre>
                 </>
               ) : (
                 <p>No testers yet.</p>
