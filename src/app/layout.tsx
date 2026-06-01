@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { BidBackPolish } from "@/components/bidback-polish";
 import { ControlRoomPolish } from "@/components/control-room-polish";
 import { DashboardOpenEstimates } from "@/components/dashboard-open-estimates";
+import { DashboardSpacingPolish } from "@/components/dashboard-spacing-polish";
 import { SignupSettingsBridge } from "@/components/signup-settings-bridge";
 import "./globals.css";
 
@@ -35,6 +36,7 @@ export default function RootLayout({
         <BidBackPolish />
         <ControlRoomPolish />
         <DashboardOpenEstimates />
+        <DashboardSpacingPolish />
         <SignupSettingsBridge />
         {children}
       </body>
