@@ -6,7 +6,7 @@ import { DashboardSpacingPolish } from "@/components/dashboard-spacing-polish";
 import { FreshStartCleaner } from "@/components/fresh-start-cleaner";
 import { ScriptTemplateUpgrade } from "@/components/script-template-upgrade";
 import { SettingsPolish } from "@/components/settings-polish";
-import { SignupHardPersonalizer } from "@/components/signup-hard-personalizer";
+import { SignupHardPersonalizerV2 } from "@/components/signup-hard-personalizer-v2";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -43,7 +43,7 @@ export default function RootLayout({
         <DashboardSpacingPolish />
         <ScriptTemplateUpgrade />
         <SettingsPolish />
-        <SignupHardPersonalizer />
+        <SignupHardPersonalizerV2 />
         {children}
       </body>
     </html>
