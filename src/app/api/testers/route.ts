@@ -10,6 +10,20 @@ type TesterRow = {
   app_data?: { estimates?: unknown[] } | null;
 };
 
+function explainCloudError(message: string) {
+  const lower = message.toLowerCase();
+  if (lower.includes("permission denied") || lower.includes("row-level security") || lower.includes("rls")) {
+    return "Supabase permissions are blocking BidBack. Run the permission SQL in Supabase, then redeploy or retest.";
+  }
+  if (lower.includes("invalid api key") || lower.includes("jwt") || lower.includes("signature")) {
+    return "The Supabase key in Vercel is invalid. Replace SUPABASE_SERVICE_ROLE_KEY with the service_role / secret service key and redeploy.";
+  }
+  if (lower.includes("relation") && lower.includes("does not exist")) {
+    return "The BidBack tables are missing in this Supabase project. Run supabase/schema.sql in this exact project.";
+  }
+  return "Supabase rejected the save. Screenshot this message so we can fix the exact cause.";
+}
+
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
@@ -37,12 +51,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await supabaseRest<TesterRow[]>("bidback_testers", {
-      query: `email_normalized=eq.${encodeURIComponent(emailNormalized)}&select=id,name,email,phone,app_data&limit=1`,
-    });
-    const existingAppData = existing[0]?.app_data ?? null;
-    const appDataToSave = existingAppData ?? body.appData ?? null;
-
+    const appDataToSave = body.appData ?? null;
     const rows = await supabaseRest<TesterRow[]>("bidback_testers", {
       method: "POST",
       query: "on_conflict=email_normalized&select=id,name,email,phone,app_data",
@@ -71,11 +80,13 @@ export async function POST(request: Request) {
       appData: tester.app_data ?? null,
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Signup failed";
     return NextResponse.json(
       {
         ok: false,
         configured: true,
-        message: error instanceof Error ? error.message : "Signup failed",
+        message,
+        fix: explainCloudError(message),
       },
       { status: 500 },
     );
