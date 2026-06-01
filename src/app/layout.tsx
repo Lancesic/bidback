@@ -3,7 +3,6 @@ import { BidBackPolish } from "@/components/bidback-polish";
 import { ControlRoomPolish } from "@/components/control-room-polish";
 import { DashboardOpenEstimates } from "@/components/dashboard-open-estimates";
 import { DashboardSpacingPolish } from "@/components/dashboard-spacing-polish";
-import { FollowUpActivityStatus } from "@/components/follow-up-activity-status";
 import { SettingsPolish } from "@/components/settings-polish";
 import "./globals.css";
 
@@ -38,7 +37,6 @@ export default function RootLayout({
         <ControlRoomPolish />
         <DashboardOpenEstimates />
         <DashboardSpacingPolish />
-        <FollowUpActivityStatus />
         <SettingsPolish />
         {children}
       </body>
