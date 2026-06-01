@@ -3,7 +3,7 @@ export function OwnerDashboardStyles() {
     <style>{`
       .owner-shell{min-height:100vh;padding:22px;background:linear-gradient(180deg,rgba(31,107,79,.08),transparent 320px),var(--background)}
       .owner-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:0 auto 18px;max-width:1240px}
-      .owner-eyebrow{margin:0 0 6px;color:var(--primary);font-weight:850;text-transform:uppercase;letter-spacing:.08em;font-size:.76rem}
+      .owner-eyebrow{margin:0 0 6px;color:var(--primary);font-weight:850;text-transform:uppercase;letter-spacing:0;font-size:.76rem}
       .owner-hero h1{margin:0;font-size:clamp(2rem,5vw,3.6rem);line-height:1}.owner-hero p{margin:8px 0 0;color:var(--muted)}
       .owner-key-form{display:flex;gap:10px;min-width:min(100%,440px)}.owner-key-form input,.owner-tools input,.owner-tools select{min-height:46px;width:100%;border:1px solid var(--border);border-radius:8px;background:var(--panel);padding:10px 12px;color:var(--foreground);font:inherit}
       .owner-key-form button,.owner-tools button,.owner-contact-actions a{border:1px solid var(--primary);border-radius:8px;background:var(--primary);color:#fff;padding:10px 14px;font-weight:800;text-decoration:none;min-height:46px}.owner-key-form button:disabled{opacity:.65}
