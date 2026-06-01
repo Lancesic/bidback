@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ActiveEstimateFeedbackPrompt } from "@/components/active-estimate-feedback-prompt";
 import { BidBackPolish } from "@/components/bidback-polish";
 import { ControlRoomPolish } from "@/components/control-room-polish";
 import { DashboardOpenEstimates } from "@/components/dashboard-open-estimates";
@@ -42,6 +43,7 @@ export default function RootLayout({
         <DemoDataControls />
         <FollowUpStageTrail />
         <SettingsPolish />
+        <ActiveEstimateFeedbackPrompt />
         {children}
       </body>
     </html>
