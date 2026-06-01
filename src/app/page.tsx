@@ -1,5 +1,5 @@
-import { BidBackAppV2 } from "@/components/bidback-app-v2";
+import { BidBackAppV3 } from "@/components/bidback-app-v3";
 
 export default function Home() {
-  return <BidBackAppV2 />;
+  return <BidBackAppV3 />;
 }
