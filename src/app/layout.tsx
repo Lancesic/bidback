@@ -5,6 +5,7 @@ import { DashboardOpenEstimates } from "@/components/dashboard-open-estimates";
 import { DashboardSpacingPolish } from "@/components/dashboard-spacing-polish";
 import { ScriptTemplateUpgrade } from "@/components/script-template-upgrade";
 import { SettingsPolish } from "@/components/settings-polish";
+import { SignupPersonalizer } from "@/components/signup-personalizer";
 import { SignupSettingsBridge } from "@/components/signup-settings-bridge";
 import "./globals.css";
 
@@ -42,6 +43,7 @@ export default function RootLayout({
         <ScriptTemplateUpgrade />
         <SettingsPolish />
         <SignupSettingsBridge />
+        <SignupPersonalizer />
         {children}
       </body>
     </html>
